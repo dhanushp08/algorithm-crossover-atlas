@@ -1,0 +1,81 @@
+\paragraph{Crossovers are early, when they happen at all.}
+For three of the four pairs the asymptotically faster algorithm wins from
+inputs that fit comfortably in L1 cache: 1\,500 keys, a $32\times32$ matrix,
+a 1\,100-bit integer. The common belief that ``the fancy algorithm only
+pays off for huge inputs'' is, for these three, off by several orders of
+magnitude. What the belief gets right is the fourth pair: an algorithm whose
+advantage lies in an operation that realistic inputs rarely perform, and whose
+implementation trades array traversal for pointer chasing, can fail to win at
+any size that fits in memory.
+
+\paragraph{The parameter moves the crossover more than the exponent does.}
+For Karatsuba the base-case cutoff shifts $n^*$ by a factor of twenty (34
+limbs at cutoff 32, 700 at cutoff 8) and halves the asymptotic advantage; for
+Strassen it moves $n^*$ between 32 and roughly 1\,000 and changes the speed at
+$n=4096$ by $1.6\times$; the shape of the matrix---how many factors of two
+its dimension has---moves Strassen's crossing by a factor of ten; and the loop
+order of the \emph{baseline} is worth $17\times$ at $n=2048$ where
+Strassen's exponent is worth $2.6\times$. In the measured range, engineering decisions that the
+asymptotic analysis cannot see dominate the decision it can. The practical
+reading is that a recursive algorithm is only as good as its base-case policy,
+and that a ``naive'' baseline must be a competent one before any comparison
+means anything.
+
+\paragraph{Wide intervals are answers, not failures.}
+Several crossings in Table~\ref{tab:crossovers} have intervals spanning a
+factor of two or more: Strassen with a too-small cutoff, Karatsuba with a
+too-small cutoff, radix sort with too-wide digits. In each the ratio curve approaches 1 slowly, and the
+bootstrap faithfully reports that the crossing could be anywhere in a wide
+range. For a practitioner this is the useful fact: over that range the two
+implementations are within noise of each other and the simpler one should be
+preferred for its simplicity; the asymptotic winner only earns its complexity
+beyond the top of the interval, and then only by the modest ratio we report
+there. Sharp crossings, by contrast, are where the decision is worth making
+carefully, and the sorting and Karatsuba (cutoff 32) rows show the grid can
+resolve them to $\pm10\%$ and to a few limbs respectively.
+
+\paragraph{Input structure can flip the verdict.}
+Radix sort's loss on nearly-sorted and reverse-sorted input and the Fibonacci
+heap's parity only on complete graphs are the same phenomenon seen from two
+sides. An algorithm
+with a worse bound but adaptive behaviour (introsort, the lazy heap) exploits
+structure that the input happens to have; an algorithm with a better bound
+and oblivious behaviour (radix sort, the Fibonacci heap's decrease-key) does
+exactly the same work regardless. Whether that is a feature or a bug depends
+on whether the structure is present, and the atlas gives the practitioner a
+way to check: the key is the input family, not the size.
+
+\paragraph{Measured exponents are honest in the middle and lie at the edges.}
+Over the largest decade of each sweep the fitted exponents sit close to theory
+for the compute-bound algorithms (Karatsuba 1.55--1.60, schoolbook
+1.97--2.01, Strassen 2.77--2.86) and drift above it for the memory-bound ones (introsort 1.14 on 64-bit keys where $n\log n$ predicts $\approx1.06$
+over that decade; the $i$-$j$-$k$ loop 4.3 where theory says 3). A fitted exponent on a log--log plot is a statement about the cache
+hierarchy as much as about the algorithm, which is why the cache boundaries
+are drawn on every runtime figure.
+
+\paragraph{What the atlas cannot say.}
+These are single-threaded scalar implementations on one machine, measured
+under a hypervisor without hardware counters. A vectorised radix sort or a
+BLAS kernel would move every crossover, and not necessarily in the direction one
+expects, since vectorisation may help the simple kernel more than the
+recursive one built on it. The harness is
+offered as the way to redraw the map rather than the map as a permanent
+answer; Section~\ref{sec:repro} gives the one command that does so.
+
+\paragraph{Guidance.}
+For a practitioner choosing between these pairs today, on hardware like
+ours:
+\begin{itemize}\itemsep0pt
+  \item Sort with radix sort (11-bit digits) when keys are integers, inputs
+  exceed about 1\,500 elements, and the data is not already nearly or
+  reverse sorted; use \texttt{std::sort} otherwise.
+  \item Use Strassen with a base case of 32--64 for dense matrices above
+  about 64 rows when the dimension is a multiple of a high power of two,
+  or above about 300 otherwise (or pad once at the top)---and fix the loop
+  order of the baseline first.
+  \item Use Karatsuba above about 32 limbs with a cutoff of 32--128; the
+  libraries already do.
+  \item Do not use a Fibonacci heap for Dijkstra on any graph that fits in
+  memory. Use a binary heap with lazy deletion unless the graph is a grid-like
+  network, where an indexed binary heap is slightly better.
+\end{itemize}

@@ -1,0 +1,226 @@
+All numbers in this section come from the \texttt{full} profile (factor-2 size
+grids, 5 timed repetitions after 2 warm-ups, 2\,411 cells, 5.3 hours) on the
+machine of Section~\ref{sec:method}, supplemented by the \texttt{refine}
+profile (factor-1.19 grids around the crossings) and the \texttt{patch}
+profile described in Section~\ref{sec:method-patch}.
+Table~\ref{tab:crossovers} gives every crossing with its interval and class.
+
+\subsection{Sorting: radix vs.\ introsort}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig_runtime_sorting}
+  \caption{Median runtime of LSD radix sort (11-bit digits) and introsort by
+  input family. Dotted lines mark the $n$ at which the working set
+  ($16n$ bytes) equals L1d, L2 and L3. Radix sort sits on a flat floor
+  below $n\approx10^3$, where the histogram pass dominates.}
+  \label{fig:runtime-sorting}
+\end{figure}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{fig_ratio_sorting_by_dist}
+  \caption{Runtime ratio radix/introsort by input family (11-bit digits).
+  Uniform keys of four widths cross between 1.4\,k and 1.7\,k; nearly-sorted
+  and reverse-sorted input never cross.}
+  \label{fig:ratio-sorting}
+\end{figure}
+
+On uniformly random keys radix sort wins from about 1\,500 elements and the
+crossing is sharp (Figures~\ref{fig:runtime-sorting}
+and~\ref{fig:ratio-sorting}): 1.43\,k keys for 8-bit values, 1.60\,k for
+16-bit, 1.51\,k for 32-bit and 1.71\,k for 64-bit, each with an interval of
+$\pm10\%$ or less. The near-independence from key width is itself a finding:
+with 11-bit digits a 64-bit key needs six passes and an 8-bit key one, yet the
+crossing barely moves, because below $\sim10^3$ keys both algorithms are
+dominated by fixed costs---the histogram and prefix-sum setup on one side,
+insertion-sort leaves on the other---and above it both scale as $n$ to within
+a few percent over the whole range (fitted exponents 1.00--1.06 for radix,
+1.02--1.14 for introsort). Above the crossing the advantage settles between
+$2.7\times$ (64-bit keys: $2.44$\,s against $6.63$\,s at $2^{26}$) and
+$4\times$ (16-bit keys: $1.14$\,s against $4.55$\,s).
+
+Digit width is the practitioner's knob and it is not free. Eleven-bit digits
+are best at every key width; eight-bit digits cost one or two extra passes
+and move the 64-bit crossing only to 1.67\,k, but sixteen-bit digits are a
+mistake for wide keys: the $2^{16}$-counter histogram per pass is 512\,KB,
+larger than L1d, and at 64-bit keys the crossing moves to 7\,k and the
+asymptotic advantage shrinks to $1.4\times$ (the gradual interval reaching
+8.6\,M in Appendix~\ref{app:table} reflects the ratio hovering between 0.5
+and 0.75 across the whole range).
+
+The structured families overturn the verdict. With only 100 distinct values
+introsort's partitioning handles duplicates well and the crossing moves to
+2.7\,k with an eventual advantage of only $2\times$. On nearly-sorted input
+radix sort \emph{never} wins: introsort is $3.7\times$ faster at $2^{26}$ keys
+($1.15$\,s vs $4.26$\,s). On reverse-sorted input it is $8\times$ faster
+($0.60$\,s vs $4.92$\,s)---median-of-three pivot selection turns a reversed
+array into perfectly balanced partitions with perfectly predictable branches,
+and introsort runs $11\times$ faster on it than on random data of the same
+size. The organ-pipe input, ascending then descending, is the intermediate
+case: radix sort crosses at 1.6\,k but only ever gets $1.4\times$ ahead.
+Radix sort performs the same scattered writes whether the input is sorted or
+not; an algorithm that is oblivious to structure cannot exploit it.
+
+\subsection{Matrix multiplication: Strassen vs.\ naive}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{fig_heatmap_matmul}
+  \caption{$\log_2$ of the runtime ratio Strassen/naive ($i$-$k$-$j$) over
+  matrix size and base-case cutoff on the power-of-two-rich grid; blue means
+  Strassen wins.}
+  \label{fig:heatmap-matmul}
+\end{figure}
+
+Strassen's algorithm is practical much earlier than folklore suggests, with
+one important qualification about matrix shape. On sizes with many factors of
+two ($n = 2^k$ and $3\cdot2^k$, the grid every benchmark uses) and a base-case
+cutoff of 32, it beats the $i$-$k$-$j$ triple loop at every size from $n=32$
+up---$0.83\times$ at $n=64$, $0.71\times$ at $256$, $0.39\times$ at $2048$,
+$0.31\times$ at $4096$ ($13.4$\,s vs $43.3$\,s)---and the fitted exponent
+over the top decade is $2.78$ against the theoretical $2.81$, with the naive
+loop at $3.21$.
+
+The refine grid, which includes sizes such as 129, 154, 217 and 259, tells a
+different story. Our implementation handles an odd dimension at any level of
+the recursion by padding that level to even size, which is the textbook
+approach; an $n$ with few factors of two is padded at level after level, and
+every padding copies both operands. On those sizes Strassen with cutoff 32 is
+up to $1.2\times$ \emph{slower} than naive until $n\approx260$, and the
+sustained crossing over all measured sizes is $n\approx300$ (interval
+$[231, 308]$), five times later than on the composite grid. Both numbers are
+right; which one applies depends on whether the caller controls the matrix
+dimensions. Production implementations pad or peel once at the top level,
+which would remove this effect, and the comparison shows how much it is worth.
+
+The cutoff behaves as expected (Figure~\ref{fig:heatmap-matmul}): 8 is one
+level too deep and costs a factor of $1.6$ at $n=4096$ ($21.2$\,s vs
+$13.4$\,s), with the crossing pushed out to between $780$ and $1\,300$ on
+uniform matrices (gradual) and to $811$ on integer ones; 16 is $1.2\times$
+slower than naive at $n=32$; 32 and 64 are equivalent within noise at the top
+of the sweep; 128 and 256 forgo the advantage below 512 and are $30$--$35\%$
+slower than cutoff 32 at the top. Integer-valued matrices behave the same as uniform real ones to within
+noise, as they should for an algorithm whose work does not depend on the
+values.
+
+The second baseline is the cautionary example. The textbook $i$-$j$-$k$ loop
+order, which walks the second operand down a column with stride $n$, has a
+fitted exponent of $4.3$ over $n\in[229, 2048]$---it is not cubic in practice,
+for reasons we take up in Section~\ref{sec:mechanisms}---and at $n=2048$ it
+takes $84$\,s where $i$-$k$-$j$ takes $5.0$\,s and Strassen $1.9$\,s. Swapping
+two loop headers in the \emph{simple} algorithm is worth $17\times$ at that
+size; Strassen's exponent, applied on top, is worth another $2.6\times$.
+
+\subsection{Integer multiplication: Karatsuba vs.\ schoolbook}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{fig_heatmap_bigint}
+  \caption{$\log_2$ of the runtime ratio Karatsuba/schoolbook over operand
+  length (32-bit limbs) and cutoff.}
+  \label{fig:heatmap-bigint}
+\end{figure}
+
+Karatsuba is the cleanest case. With a cutoff of 32 limbs it overtakes
+schoolbook multiplication at 34 limbs (interval $[32, 42]$; roughly $1\,100$
+bits), essentially as soon as it does anything at all, and the measured
+exponents over the top decade are $1.55$--$1.60$ for Karatsuba against
+$1.97$--$2.01$ for schoolbook, within $0.04$ of $\log_2 3$ and $2$. Schoolbook
+exceeded the 90-second budget at $4.5\times10^5$ limbs; at the last common
+size, $3\times10^5$ limbs ($9.7$\,Mbit operands), Karatsuba is $18\times$
+faster ($3.6$\,s vs $65$\,s). The crossing at 34 32-bit limbs is 17 64-bit
+limbs (about 1\,090 bits). GMP's tuned parameter file for Alder Lake, the
+previous generation of the same core design, sets
+\texttt{MUL\_TOOM22\_THRESHOLD} to 13 64-bit limbs (830
+bits)~\cite{gmp2022alderlake}, so the two land within a factor of $1.3$ of
+each other. The agreement should not be over-read: GMP measures its threshold
+against a hand-written assembly basecase and with an assembly Karatsuba, so
+both sides of its comparison differ from ours, and the near-coincidence says
+mainly that the crossover is insensitive to the quality of the
+implementation when both sides are implemented with equal care.
+
+With all-ones limbs---maximal carry propagation---schoolbook is unchanged but
+Karatsuba is $1.8\times$ faster than on random limbs, because the sub-products
+of the sum terms have predictable carries; the crossing is essentially unchanged (Karatsuba is ahead from the
+first size at which it differs from schoolbook). The
+cutoff sensitivity is asymmetric (Figure~\ref{fig:heatmap-bigint}): cutoffs of
+32, 64 and 128 are indistinguishable at large $n$, 16 makes the crossing
+gradual (the two are within noise from 34 to about 60 limbs), and 8 pushes it out
+to $\approx700$ limbs and costs a factor of $1.9$ at every size above
+($42.8$\,s vs $22.7$\,s at $10^6$ limbs). A cutoff four times too large costs
+nothing; four times too small costs $2\times$.
+
+\subsection{Shortest paths: Fibonacci heap vs.\ binary heap}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{fig_ratio_dijkstra_by_dist}
+  \caption{Runtime ratio Fibonacci-heap/binary-heap (decrease-key) Dijkstra
+  by graph family (random graphs: average out-degree 16). Only the complete
+  graph reaches the line, and only at the largest size that fits in memory.}
+  \label{fig:ratio-dijkstra}
+\end{figure}
+
+The Fibonacci heap is the pair that does not cross. On random graphs of
+average degree 2, 4, 16, 64 and 256 it trails the indexed binary heap by
+$2.1\times$, $1.7\times$, $1.4\times$, $1.3\times$ and $1.3\times$ at the
+largest sizes measured ($8.4\times10^6$ vertices at degrees 2--16, $134$\,M
+edges at degree 16; $4.2\times10^6$ at degree 64 and $1.0\times10^6$ at 256), on 2-D grids by $2.6\times$ (in line with the $3.15\times$ that
+Larkin, Sen and Tarjan measured against an implicit 4-ary heap on the USA road
+network~\cite{larkin2014backtobasics}), and the gap narrows only slowly with
+$n$ (Figure~\ref{fig:ratio-dijkstra}). The reason is in the operation counts
+the harness logs: Dijkstra performs $0.05$ decrease-keys per vertex on
+degree-2 graphs, $0.3$ on degree-4 graphs and grids, and $1.4$ at degree 16,
+so the $\bigO(1)$ amortised decrease-key that justifies the Fibonacci heap is
+exercised far less often than the $\bigO(\log n)$ delete-min that both heaps
+share; Section~\ref{sec:mechanisms} argues that the Fibonacci heap's
+delete-min is the more expensive of the two.
+
+On complete graphs ($m = n(n-1)$, $6$ decrease-keys per vertex) the ratio
+falls steadily from $2.4$ at 100 vertices to $1.0$ at $6\,500$ and $0.98$ at
+$7\,700$ vertices ($60$\,M edges, the largest that fits in memory). This is
+the regime $m \gg n\log n$ in which $\bigO(m+n\log n)$ should beat
+$\bigO(m\log n)$, and the trend is as theory predicts---but what it reaches
+within the measurable range is parity, not a win, and the atlas reports it as
+such.
+
+Even that parity is against the wrong baseline. The lazy variant,
+\texttt{std::priority\_queue} with stale entries skipped on pop, does no
+decrease-keys at all and is the fastest of the three on every random graph and
+on the complete graph: $78$\,ms against $135$\,ms (Fibonacci) and $138$\,ms
+(indexed binary) at $7\,700$ dense vertices; $6.3$\,s against $15.0$\,s and
+$8.6$\,s at $8.4$\,M vertices of degree 4---the same ``at least $1.4\times$'' advantage for
+dropping decrease-key that Chen et al.\ report on random graphs of average
+degree 8~\cite{chen2007priority}. Its heap holds duplicate entries and does
+more pops, but each pop touches a contiguous array and the extra work costs
+less than any form of decrease-key bookkeeping. Only on grids, where the
+frontier is small and duplicates accumulate, does the indexed binary heap edge
+it out ($1.89$\,s vs $2.28$\,s). The Fibonacci heap never beats the lazy heap
+in any cell, trailing it by $1.7\times$ even on the complete graph.
+
+\subsection{Summary}
+
+\begin{table}[t]
+  \centering\scriptsize
+  \caption{Sustained crossover points with 95\% bootstrap intervals (shortest
+  interval over 1000 resamples of the repetitions). Sharp crossings are given
+  as a point; gradual ones (interval wider than a grid step or a factor 1.5)
+  as the range over which the two algorithms are within noise of each other;
+  ``parity only'' marks a crossing that is never more than 10\% ahead by the
+  largest size measured. $\rho(n_{\max})$ is the runtime ratio at the largest
+  size measured. For matrices the crossing is reported on the
+  power-of-two-rich grid and on all sizes separately. This table shows the
+  default parameter of each pair (11-bit digits, cutoff 32); every
+  parameter is in Appendix~\ref{app:table}.}
+  \label{tab:crossovers}
+  \input{../figures/table_crossovers}
+\end{table}
+
+Three of the four theoretically faster algorithms win, and early: at
+$1\,500$ keys, 32 rows, and 34 limbs---and for the well-tuned configurations
+these are sharp crossings with intervals of $\pm10\%$. Each has conditions:
+radix sort needs the input not to be nearly or reverse sorted, Strassen needs the matrix
+dimension to be rich in factors of two or the implementation to pad only
+once, Karatsuba needs its cutoff not to be too small. The fourth reaches
+parity on complete graphs at the edge of memory and loses everywhere else,
+including to the lazy idiom that practitioners actually write.

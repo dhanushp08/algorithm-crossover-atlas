@@ -1,0 +1,162 @@
+\subsection{Algorithm pairs and what is held fixed}
+
+Each pair consists of a \emph{faster-in-theory} algorithm $F$ and a
+\emph{simpler} algorithm $S$ (Table~\ref{tab:pairs}). Three rules keep the
+comparison about the algorithmic idea rather than about implementation effort.
+\begin{enumerate}
+  \item \textbf{Same language, compiler and flags.} C++17, GCC, \texttt{-O2},
+  no \texttt{-march=native} (the x86-64 baseline ISA), no hand-written SIMD, no
+  threads. (The harness can rebuild with \texttt{-O3 -march=native} for a
+  secondary experiment; that experiment is not part of this paper.)
+  \item \textbf{Same base case.} The recursive algorithms (Strassen, Karatsuba)
+  bottom out in exactly the kernel they are compared against, so the measured
+  difference is attributable to the recursive structure, its extra additions
+  and its memory traffic.
+  \item \textbf{Competent, textbook implementations on both sides.} Radix sort
+  computes all digit histograms in one pass and skips passes in which every key
+  shares a digit; Karatsuba uses a caller-provided scratch buffer; the
+  Fibonacci heap pre-allocates one node per vertex. The simpler algorithms are
+  what a careful programmer writes: \texttt{std::sort}, the $i$-$k$-$j$ loop
+  order, 64-bit multiply-accumulate, an indexed binary heap with
+  decrease-key---and, as a second baseline, the lazy \texttt{std::priority\_queue}
+  idiom that is far more common in practice.
+\end{enumerate}
+
+\begin{table}[t]
+\centering\small
+\caption{The four algorithm pairs and the variables swept.}
+\label{tab:pairs}
+\begin{tabular}{p{2.2cm}p{3.3cm}p{3.3cm}p{5.6cm}}
+\toprule
+Pair & $F$ & $S$ & Swept \\
+\midrule
+Sorting & LSD radix sort, $\bigO(n\cdot 64/d)$ for $d$-bit digits & introsort (\texttt{std::sort}), $\bigO(n\log n)$ & $n\in[16,2^{26}]$; key width 8/16/32/64 bits; nearly-sorted, reverse, few-unique, organ-pipe; $d\in\{8,11,16\}$ \\
+Matrix multiply & Strassen, $\bigO(n^{2.807})$ & naive triple loop, $\bigO(n^3)$ & $n\in[16,4096]$ incl.\ non-powers of two; cutoff $\in\{8,\dots,256\}$; $i$-$k$-$j$ vs $i$-$j$-$k$ baseline \\
+Integer multiply & Karatsuba, $\bigO(n^{1.585})$ & schoolbook, $\bigO(n^2)$ & $n\in[8,2^{20}]$ 32-bit limbs; cutoff $\in\{8,\dots,128\}$; random and all-ones limbs \\
+Shortest paths & Dijkstra + Fibonacci heap, $\bigO(m+n\log n)$ & Dijkstra + binary heap, $\bigO((n+m)\log n)$ & $n\in[10^2,8.4\times10^6]$; average degree $\in\{2,\dots,256\}$; random / 2-D grid / complete graphs; lazy baseline \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Inputs}
+Inputs are generated deterministically from a 64-bit seed combined with $n$
+(xoshiro256** seeded through splitmix64), so every cell of the experiment is
+reproducible from the command line that produced it. Sizes form a geometric
+grid (factor 2 for the main sweeps, 1.5 for integer multiplication, and a
+hand-picked list for matrices that includes sizes such as 24, 48 and 96 that
+exercise Strassen's padding path). A \emph{cell} is a (pair, input family,
+parameter, $n$) tuple. Cells that make no sense are skipped by rule (a complete
+graph on $10^7$ vertices); an algorithm whose single run exceeds a wall-clock
+budget is dropped for larger $n$ in that series, so that cubic baselines do not
+dominate the running time of the experiment.
+
+\subsection{Measurement}
+\paragraph{Timer.} \texttt{std::chrono::steady\_clock} (\texttt{CLOCK\_MONOTONIC}
+through the vDSO, about 20\,ns overhead). For inputs whose single run exceeds
+2\,ms the input is copied outside the timed region and only the algorithm is
+timed. Shorter runs are batched: the harness runs $K$ iterations of (copy
+input; run algorithm) and reports the per-iteration mean, with $K$ chosen from
+a warm calibration run; because in-place algorithms need a fresh copy per
+iteration, the copy is inside the timed region, and its cost is measured
+separately with the same $K$ on the same pre-allocated buffer and subtracted
+in the analysis (never below 5\% of the raw time).
+
+\paragraph{Repetitions and interleaving.} Each cell is measured $r=5$ times
+after $w=2$ untimed warm-up runs. Within the repetition loop the algorithms
+alternate in a rotating order, so slow drift in machine state (thermal
+throttling, background activity, frequency changes) is shared equally by $F$
+and $S$. The per-cell statistic is the median; the interquartile range is
+retained and plotted.
+
+\paragraph{Hardware counters.} When \texttt{perf\_event\_open} is permitted,
+each measurement also records cycles, retired instructions, L1d read misses,
+last-level-cache misses and branch mispredictions for the user-space portion of
+the run, scaled for multiplexing. These are explanatory, not primary: the
+crossover is defined on wall-clock time. Where counters are unavailable (virtual
+machines, WSL2) the study is timing-only and says so.
+
+\paragraph{Correctness.} Every benchmark binary cross-checks the outputs of $F$
+and $S$ on the last repetition of each cell and aborts on mismatch. Separate
+randomized test suites compare each implementation with an independent
+reference (\texttt{std::sort}; the $i$-$j$-$k$ product; schoolbook plus the
+modular identity $(ab)\bmod p = ((a\bmod p)(b\bmod p))\bmod p$ with
+$p=2^{61}-1$; Bellman--Ford), and both heaps are exercised directly against a
+scan-for-minimum oracle under random push, decrease-key and pop sequences.
+
+\subsection{Runs and a measurement correction}\label{sec:method-patch}
+The reported dataset is the union of three runs made in one session on the
+same machine, with the same binary flags: \texttt{full} (the sweeps of
+Table~\ref{tab:pairs}, 5.3 hours), \texttt{refine} (factor-1.19 grids over
+the neighbourhood of each crossing, 20 minutes) and \texttt{patch} (70
+minutes). The patch exists because the first version of the harness measured
+the input-copy baseline into a freshly allocated buffer, so that for large
+inputs the baseline included the operating system's page-fault cost while the
+copy inside the timed loop, reusing the buffer, did not; the subtraction then
+removed too much. The effect is below 5\% wherever the copy is small relative
+to the run, which is almost everywhere, but for complete graphs (470\,MB of
+adjacency at 7\,700 vertices against a 100\,ms run) and for the largest
+arrays sorted by the fastest configurations it was large enough to invalidate
+the cell. We fixed the harness as described above, re-measured every series in
+which the copy had exceeded 5\% of the raw time (dense graphs at all sizes,
+arrays of $2^{21}$ keys and above, sparse graphs of $2^{20}$ vertices and
+above, and a handful of small cells), and let the re-measurement
+\emph{replace} the original cells over the range of $n$ it covers rather than
+pool with them. Both the original and the corrected data are in the
+repository; the analysis script's \texttt{--supersede} flag applies the
+replacement.
+
+\subsection{Machine}
+All reported measurements were made on a laptop with an Intel Core
+i7-14650HX (Raptor Lake, 8 performance cores + 8 efficiency cores, 24
+threads; 48\,KB L1d and 2\,MB L2 per performance core, 30\,MB shared L3)
+running Ubuntu under WSL2 (Linux 6.18, Microsoft hypervisor) with 7.6\,GB of
+memory visible to the guest, GCC 15.2.0 with \texttt{-O2}, CMake 4.2. The
+laptop was on mains power in the manufacturer's \emph{Performance} mode, the
+Windows power plan was set to \emph{High performance} with maximum processor
+state 99\% (which disables Turbo Boost on Intel parts), the WSL virtual
+machine was restricted to the performance cores through its process
+affinity, and the benchmark thread was pinned to one virtual CPU. The hypervisor hides
+hardware performance counters, so the reported run is timing-only; the
+harness collects counters automatically on bare-metal Linux, where it also
+sets the performance governor, disables turbo and pins the frequency
+(\texttt{scripts/setup\_machine.sh}). We report the machine exactly and treat
+absolute times as specific to it; the crossover \emph{ordering} and
+\emph{order of magnitude} are the transferable results.
+
+\subsection{Crossover estimation}
+For a series (pair, family, parameter) let $\rho(n)=\tilde t_F(n)/\tilde t_S(n)$
+be the ratio of median runtimes on the size grid. The crossover $n^*$ is the
+\emph{sustained} crossing: the grid interval after which $\rho<1$ at every
+larger measured size, interpolated linearly in $(\log n,\log\rho)$. A
+transient dip below 1 followed by a return above it is not counted; it remains
+visible in the ratio plots and in the reported minimum ratio. Series with $\rho<1$ already at the smallest $n$ are
+reported as \emph{always faster} (from $n_{\min}$) and series with $\rho\ge1$
+throughout as \emph{never faster} (up to $n_{\max}$), together with
+$\rho(n_{\max})$ so the reader can see how far from crossing they are.
+Uncertainty comes from a non-parametric bootstrap: the $r$ repetitions of every
+cell are resampled with replacement (1000 replicates), medians and $n^*$ are
+recomputed, and the shortest interval containing 95\% of the replicates (in
+$\log n$) is reported. The shortest rather than the central interval is used
+because the sustained-crossing statistic can be bimodal: a resample in which
+one noisy mid-range cell pops above $\rho=1$ relocates the crossing to the far
+end of the sweep, and a percentile interval would stretch over that tail even
+when nearly all of the mass sits tightly around the true crossing.
+
+Two caveats govern how the intervals should be read. First, $n^*$ is
+interpolated between grid points, so an interval cannot resolve a crossing
+more finely than the grid allows; the main sweeps use a factor-2 grid and the
+\texttt{refine} profile re-sweeps the neighbourhood of each crossing on a
+factor-1.19 grid for that purpose. Second, and more important, the width of an
+interval is itself a result. We classify each crossing as \emph{sharp} when
+its interval is narrower than one grid step or than a factor of 1.5,
+whichever is wider (a $\pm20\%$ interval is sharp by any practical standard,
+even on a fine grid), as \emph{gradual} otherwise, and as \emph{marginal}
+when the faster algorithm is never more than 10\% ahead by the largest size
+measured, whatever the interval. A gradual crossing means that $\rho$ approaches
+1 slowly, i.e.\ the two algorithms are within measurement noise of each other
+across the whole interval; the honest statement is then not ``the fast
+algorithm wins from $n^*$'' but ``over this range it makes no measurable
+difference, and beyond it the fast algorithm wins by the ratio we report at
+$n_{\max}$''. Gradual crossings are reported as ranges, never as points. Empirical scaling exponents are fitted as $\log t = b\log n + c$
+over the largest decade of $n$ for each algorithm, to show how far the
+measured growth is from the asymptotic bound in the measured range.

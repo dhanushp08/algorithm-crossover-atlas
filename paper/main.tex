@@ -1,0 +1,207 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{microtype}
+\graphicspath{{../figures/}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\bigO}{\mathcal{O}}
+
+\title{When Does a Theoretically Faster Algorithm Actually Win?\\
+\large An empirical crossover atlas for four classic algorithm pairs}
+\author{Dhanush Paturu \\ Nitte Meenakshi Institute of Technology, Bengaluru, India \\ \href{https://orcid.org/0009-0004-4918-6181}{ORCID 0009-0004-4918-6181}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Asymptotic analysis promises that an algorithm with a better growth rate will
+eventually outperform a simpler one, but says nothing about \emph{when}. For four
+classic pairs---radix sort versus introsort, Strassen versus naive matrix
+multiplication, Karatsuba versus schoolbook integer multiplication, and
+Dijkstra's algorithm with a Fibonacci heap versus a binary heap---we measure the
+input size at which the asymptotically faster algorithm first wins in wall-clock
+time on a current commodity CPU, and how that crossover moves with input
+structure (key width, sortedness, graph density) and with the tuning parameter
+every recursive algorithm has (its base-case cutoff). Both sides of each pair are
+plain, single-threaded C++ compiled with the same flags, and the recursive
+algorithms bottom out in exactly the kernel they are compared against.
+Crossovers are estimated on geometric size grids with bootstrap confidence
+intervals over interleaved repetitions. On an Intel Core i7-14650HX, radix sort overtakes introsort at about 1\,500
+keys regardless of key width, but never on nearly-sorted or reverse-sorted
+input, where introsort stays $3.7\times$ and $8\times$ ahead at $2^{26}$ keys; Strassen
+overtakes the naive triple loop from $n=32$ on dimensions rich in factors of
+two but only from $n\approx300$ on arbitrary dimensions, and the loop order of
+the \emph{naive} baseline is worth more than Strassen's exponent; Karatsuba
+overtakes schoolbook multiplication at 34 limbs, within a factor of $1.3$ of
+the threshold a tuned library uses on the same core family; and the Fibonacci heap never beats a binary heap on any sparse graph,
+reaching parity only on complete graphs at the edge of memory while still
+losing to the lazy-deletion binary heap that practitioners actually write.
+Crossovers are reported with bootstrap intervals and classified as sharp,
+gradual or marginal, and we argue that a wide interval is itself the practical
+answer: a range over which the choice does not matter. The result is a practical reference: a map of where the constants
+hidden by $\bigO$-notation stop mattering, with the code and data to redraw it
+on any machine.
+\end{abstract}
+
+\section{Introduction}
+
+The standard argument for preferring an algorithm with a better asymptotic
+bound is that, for large enough inputs, it must win. The argument is correct and
+incomplete: it is silent about the size at which ``large enough'' begins, and in
+practice that size is set by constant factors that the analysis discards---the
+number of passes over memory, the size of the working set relative to the cache
+hierarchy, the predictability of branches, and the overhead of recursion and
+bookkeeping. Experienced programmers carry folk knowledge about these
+crossovers (``radix sort is only worth it for big arrays'', ``nobody uses
+Fibonacci heaps''), but the folk knowledge is rarely written down with numbers,
+and when it is, the numbers are a decade old and from a different cache
+hierarchy.
+
+This paper measures the crossovers directly. For each of four algorithm pairs
+we sweep the input size over two and a half to seven orders of magnitude, vary the
+structure of the input and the tuning parameter of the faster algorithm, and
+record the first size at which the median wall-clock time of the theoretically
+faster algorithm drops below that of the simpler one. We call the resulting
+table and plots a \emph{crossover atlas}.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item A controlled, reproducible measurement of crossover points for radix
+  sort vs.\ introsort, Strassen vs.\ naive matrix multiplication, Karatsuba vs.\
+  schoolbook multiplication and Fibonacci-heap vs.\ binary-heap Dijkstra, with
+  bootstrap confidence intervals (Section~\ref{sec:results}).
+  \item An analysis of \emph{what moves} each crossover: key width and
+  sortedness for sorting, the base-case cutoff for the two recursive
+  algorithms, and graph density and the lazy-deletion idiom for shortest
+  paths (Section~\ref{sec:results}).
+  \item An account of the mechanism behind each crossover---passes over
+  memory, the access pattern of the base case, pointer chasing against
+  arrays---argued from working-set sizes and logged operation counts
+  (Section~\ref{sec:mechanisms}).
+  \item A benchmarking harness that handles the practical difficulties
+  (sub-microsecond inputs, cubic baselines that would otherwise dominate the
+  sweep, drift between repetitions) and that re-draws the atlas on any Linux
+  machine with one command (Section~\ref{sec:method}, repository in
+  Section~\ref{sec:repro}).
+\end{enumerate}
+
+\section{Background and related work}\label{sec:background}
+
+\input{sections/background}
+
+\section{Method}\label{sec:method}
+
+\input{sections/method}
+
+\section{Results}\label{sec:results}
+
+\input{sections/results}
+
+\section{Mechanisms}\label{sec:mechanisms}
+
+The reported run was made under WSL2, which hides the hardware performance
+counters, so what follows is not measured: it is the set of explanations we
+find most consistent with the timings, the working-set sizes and the
+operation counts the harness logs. Each is stated as an attribution and could
+be tested directly with the counter support the harness already has on
+bare-metal Linux (\texttt{figures/fig\_counters\_*} are produced automatically
+from such a run). 
+
+\paragraph{Sorting: passes over memory against passes with unpredictable
+branches.} LSD radix sort with $d$-bit digits makes $\lceil k/d\rceil$ passes
+over the array for $k$-bit keys, each a sequential read and a scatter of
+writes into $2^d$ output streams, with no data-dependent branches.
+Introsort makes $\Theta(\log n)$ partition passes; each reads sequentially
+from both ends of its range, which is cache-friendly, but the comparison at
+every element is a branch that mispredicts about half the time on random
+keys, and the number of passes grows with $n$. We attribute radix sort's
+widening advantage above the crossing (Figure~\ref{fig:ratio-sorting}) to
+this difference in pass count and branch behaviour, and the flat floor below
+$\sim10^3$ keys to the fixed cost of the $2^d$-entry histograms. The
+structured families support the branch explanation directly: on
+nearly-sorted and reverse-sorted input introsort's comparisons become
+predictable and it runs $6$--$11\times$ faster than on random keys of the
+same size, while radix sort, whose work does not depend on the key order,
+does not change. Whether radix sort's scattered stores are a bottleneck at
+large $n$ is exactly what a counter run would show; the 16-bit-digit
+results, where a $512$\,KB histogram exceeds L1d and the advantage shrinks,
+suggest that the histogram's locality matters more than the output scatter.
+
+\paragraph{Matrix multiplication: the access pattern of the base case.}
+Strassen and Karatsuba change the number of multiplications but not how the
+leaves access memory; their overhead is a constant number of extra additions
+and temporaries per level. This is consistent with crossings that are small
+and, on well-shaped inputs, insensitive to $n$ above the cutoff, and with
+measured exponents within $0.04$ of theory for both recursive algorithms at
+every cutoff. The $i$-$j$-$k$ baseline is the clearest case of an access
+pattern, not an operation count, setting the time: its inner loop walks the
+second operand down a column with stride $8n$ bytes, so computing one row of
+the result touches every cache line of that operand; the operand is $8n^2$
+bytes, which passes L1d (48\,KB) at $n\approx77$ and L2 (2\,MB) at $n=512$. The fitted exponent of $4.3$ over $n\in[229,2048]$ is consistent
+with the operand leaving L2 within that range and every inner-loop step then
+paying a cache miss. We attribute the odd-size penalty of Strassen to the
+per-level padding copies, which the implementation makes explicitly and
+whose count depends on the number of odd dimensions met in the recursion.
+
+\paragraph{Shortest paths: pointer chasing against arrays.} A binary heap of
+$n$ entries is one contiguous array and a sift costs $\log_2 n$ steps whose
+addresses are computable in advance. A Fibonacci heap's consolidation walks a
+linked root list of $\bigO(\log n)$ trees whose nodes were allocated in
+insertion order, each step a dependent load. Both do $n$ delete-mins; the
+Fibonacci heap pays this cost on every one and, on sparse graphs, recoups
+little through decrease-keys because there are few: $0.05$ per vertex at
+degree 2, $0.3$ at degree 4 and on grids, $1.4$ at degree 16 (operation
+counts from the harness log). On complete graphs there are $6$ per vertex,
+and the ratio falls towards 1 as theory predicts. This is the attribution
+Larkin, Sen and Tarjan~\cite{larkin2014backtobasics} made from measured L1
+miss rates on a road network, and our timings are consistent with it; we
+have not measured it here.
+
+\section{Discussion}\label{sec:discussion}
+
+\input{sections/discussion}
+
+\section{Threats to validity}
+\input{sections/threats}
+
+\section{Reproducibility}\label{sec:repro}
+All code, raw measurements, analysis scripts and figure sources are at
+\url{https://github.com/dhanushp08/algorithm-crossover-atlas} (tag \texttt{v1.0}). \texttt{make} builds and tests the code;
+\texttt{make full} and \texttt{make refine} re-measure the sweeps, and the
+analysis command in the README regenerates every number, table and figure in
+this paper from the raw measurements; \texttt{docs/BENCHMARKING.md} describes
+the machine setup. The raw data of the reported runs (\texttt{full},
+\texttt{refine} and \texttt{patch}, Section~\ref{sec:method-patch}, together
+with three preliminary \texttt{quick} runs) is in \texttt{results/}.
+
+\section{Conclusion}
+Asymptotic analysis answers ``which algorithm wins eventually''; this paper
+answers ``from what size'' for four pairs that programmers choose between every
+day, on one well-described machine, with intervals rather than point guesses.
+Three of the four crossovers are small enough to fit in first-level cache
+and, for well-tuned configurations, sharp; one does not exist on any sparse
+input and reaches only parity on dense ones; and in every case the tuning
+parameter, the input structure or the shape of the problem moved the answer
+more than the exponent did. Where the data cannot pin a crossover down, we report the range
+rather than a point, because within that range the choice is immaterial.
+The harness that produced the atlas rebuilds it with one command, so the map
+can be redrawn as the hardware underneath it changes.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+\appendix
+\section{All crossover points}\label{app:table}
+{\scriptsize
+\input{../figures/table_crossovers_full}
+}
+
+\end{document}

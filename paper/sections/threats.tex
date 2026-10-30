@@ -1,0 +1,15 @@
+\paragraph{Single machine.} Crossovers depend on cache sizes, memory bandwidth
+and the branch predictor. We report one machine in full and treat
+cross-machine generalisation as future work, offering the harness as the means.
+\paragraph{Implementation quality.} Both sides are deliberately plain. A SIMD
+radix sort or a BLAS kernel would move every crossover, and so, to a smaller
+degree, would compiling with \texttt{-O3 -march=native}; the harness provides
+that variant (\texttt{make native-quick}) but we have not run it for this
+paper.
+\paragraph{Virtualisation.} WSL2 adds timer and scheduling noise and hides
+counters. The interleaving and the bootstrap are designed to make the ratio
+robust to it, and the interval widths make the residual noise visible rather
+than hidden.
+\paragraph{Input families.} Each family is a convenience sample of structures
+known to matter (sortedness, key width, density); the atlas is a map, not a
+census.

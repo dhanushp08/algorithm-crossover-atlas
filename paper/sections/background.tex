@@ -1,0 +1,100 @@
+\subsection{Experimental algorithmics}
+The case for measuring algorithms rather than only analysing them was made
+systematically by Johnson~\cite{johnson2002theoretician}, whose guide for
+theoreticians lists the pitfalls this paper tries to avoid (uninteresting
+instances, unfair baselines, unreported machines), and by
+McGeoch~\cite{mcgeoch2012guide}, whose book is the standard reference on
+experimental design for algorithms. Sanders~\cite{sanders2009algorithm} frames
+the activity as \emph{algorithm engineering}: a cycle of design, analysis,
+implementation and experiment in which the constant factors are first-class
+objects. The measurement side has its own literature of cautionary results.
+Mytkowicz et al.~\cite{mytkowicz2009producing} showed that link order and
+environment-variable size alone can change measured runtimes by tens of
+percent, more than many published effects; Curtsinger and
+Berger~\cite{curtsinger2013stabilizer} proposed randomising memory layout so
+that such effects average out; and Hoefler and Belli~\cite{hoefler2015scientific}
+surveyed reporting practice and argued for repetition, interval estimates and
+full disclosure of the machine. LaMarca and Ladner~\cite{lamarca1999influence}
+is the direct ancestor of this study for sorting: by instrumenting cache
+misses they showed that the instruction count of a sorting algorithm is a poor
+predictor of its time once the input leaves cache, and that memory-aware
+variants of heapsort and mergesort outrun the textbook versions.
+
+\subsection{The four pairs}
+\paragraph{Sorting.}
+Introsort~\cite{musser1997introspective}---quicksort with a heapsort fallback
+and insertion sort for small ranges---is what \texttt{std::sort} runs in every
+major C++ standard library, which makes it the baseline a practitioner actually
+faces. Rahman and Raman~\cite{rahman2001adapting} adapted LSD radix sort to the
+cache and TLB and showed it beating comparison sorts on large arrays of
+integers; Satish et al.~\cite{satish2010fast} compared radix and merge sort
+across CPUs and GPUs and found radix sort faster for 32-bit keys but merge sort
+preferable for wide keys and on bandwidth-limited hardware; Polychroniou and
+Ross~\cite{polychroniou2014comprehensive} studied the partitioning step that
+both families share at billion-key scale. None of these report the crossover
+size against \texttt{std::sort} as an estimated quantity, and all use SIMD
+and multithreading that move it.
+
+\paragraph{Matrix multiplication.}
+Strassen's 1969 algorithm~\cite{strassen1969gaussian} is the archetype of an
+asymptotic improvement that is practical only after engineering.
+Huss-Lederman et al.~\cite{husslederman1996implementation} gave the first
+careful implementation study, establishing that the recursion must stop at a
+tuned cutoff and that odd dimensions need peeling or padding; D'Alberto and
+Nicolau~\cite{dalberto2007adaptive} tuned that cutoff adaptively to the memory
+hierarchy; Benson and Ballard~\cite{benson2015framework} showed that the best
+fast algorithm depends on matrix shape; and Huang et
+al.~\cite{huang2016strassen}, by fusing Strassen's additions into a BLIS
+kernel, brought the \emph{switch point}---the dimension above which one level of
+Strassen pays off against a vendor-grade DGEMM---down from the roughly 2\,000
+of earlier implementations to as little as 500 for their best variant, on a
+single Ivy Bridge Xeon core. Those crossovers are against the strongest
+possible baseline. Ours is against the baseline a
+programmer writes without a BLAS, and is correspondingly much earlier.
+
+\paragraph{Integer multiplication.}
+Karatsuba and Ofman's algorithm~\cite{karatsuba1962multiplication} is the
+first sub-quadratic multiplication and the first step of the tower that ends,
+for now, at Harvey and van der Hoeven's $\bigO(n\log n)$
+algorithm~\cite{harvey2021integer}, which is correct and
+unimplementable. Bernstein~\cite{bernstein2001multidigit} gives the modern
+unified view. The GNU Multiple Precision library~\cite{gmp2023manual} switches
+from schoolbook to Karatsuba at a machine-tuned threshold
+(\texttt{MUL\_TOOM22\_THRESHOLD}), which its manual notes can be as low as ten
+64-bit limbs; the parameter file GMP ships for Alder Lake sets it to 13
+limbs~\cite{gmp2022alderlake}. This gives an external reference point for our
+measured crossover.
+
+\paragraph{Shortest paths.}
+Fredman and Tarjan~\cite{fredman1987fibonacci} introduced the Fibonacci heap
+precisely to improve Dijkstra's algorithm from $\bigO(m\log n)$ to
+$\bigO(m+n\log n)$, and the data structure has been a textbook fixture ever
+since; Brodal, Lagogiannis and Tarjan~\cite{brodal2012strict} later made the
+bounds worst-case. The empirical record is uniformly unkind to it. Cherkassky,
+Goldberg and Radzik~\cite{cherkassky1996shortest} found simple heaps and bucket
+structures faster on every graph family they tried; Chen et
+al.~\cite{chen2007priority} dropped the Fibonacci heap from their comparison
+after preliminary runs and found that Dijkstra variants \emph{without}
+decrease-key were at least $1.4\times$ faster than those with it on random
+graphs of average degree 8 (and faster on every road network they tried); and
+Larkin, Sen and Tarjan~\cite{larkin2014backtobasics}, on the full USA road
+network, measured the Fibonacci heap at $3.15\times$ the time of an implicit
+4-ary heap, with one decrease-key for every fourteen inserts, and found the L1
+cache-miss rate to be the counter most strongly correlated with wall-clock
+time. Our results
+agree with all of these and add the one regime, complete graphs, in which the
+asymptotic argument finally holds.
+
+\subsection{Hidden constants and galactic algorithms}
+Lipton~\cite{lipton2010galactic} coined \emph{galactic algorithm} for
+one whose asymptotic advantage appears only on inputs larger than any that
+will be run, with fast matrix multiplication as the canonical example: the
+exponent has been pushed to $\omega<2.372$~\cite{alman2024refined,
+alman2024asymmetry}, yet nothing past Strassen is used in practice. This paper
+sits at the opposite end of that spectrum. Its four pairs are algorithms that
+are actually used, and the question is not whether their crossovers exist but
+where, with what precision, and what moves them. The hardware background that
+answers ``why''---cache levels, memory-level parallelism, branch
+prediction---is laid out by Drepper~\cite{drepper2007memory} and Fog~\cite{fog2026optimizing}; the
+Linux \texttt{perf\_event\_open} interface~\cite{linux2026perfeventopen} is
+how the harness reads the counters where it can.
