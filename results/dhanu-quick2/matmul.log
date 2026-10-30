@@ -1,0 +1,34 @@
+[info] pair=matmul counters: cycles:unavailable instructions:unavailable l1d_misses:unavailable llc_misses:unavailable branch_misses:unavailable 
+[progress] matmul dist=uniform param=16 n=16 done
+[progress] matmul dist=uniform param=16 n=32 done
+[progress] matmul dist=uniform param=16 n=64 done
+[progress] matmul dist=uniform param=16 n=128 done
+[progress] matmul dist=uniform param=16 n=256 done
+[progress] matmul dist=uniform param=16 n=512 done
+[progress] matmul dist=uniform param=16 n=1024 done
+[info] matmul/naive_ijk dist=uniform param=16 n=2048 took 84.20s > budget; skipping larger n
+[progress] matmul dist=uniform param=16 n=2048 done
+[progress] matmul dist=uniform param=32 n=16 done
+[progress] matmul dist=uniform param=32 n=32 done
+[progress] matmul dist=uniform param=32 n=64 done
+[progress] matmul dist=uniform param=32 n=128 done
+[progress] matmul dist=uniform param=32 n=256 done
+[progress] matmul dist=uniform param=32 n=512 done
+[progress] matmul dist=uniform param=32 n=1024 done
+[progress] matmul dist=uniform param=32 n=2048 done
+[progress] matmul dist=uniform param=64 n=16 done
+[progress] matmul dist=uniform param=64 n=32 done
+[progress] matmul dist=uniform param=64 n=64 done
+[progress] matmul dist=uniform param=64 n=128 done
+[progress] matmul dist=uniform param=64 n=256 done
+[progress] matmul dist=uniform param=64 n=512 done
+[progress] matmul dist=uniform param=64 n=1024 done
+[progress] matmul dist=uniform param=64 n=2048 done
+[progress] matmul dist=uniform param=128 n=16 done
+[progress] matmul dist=uniform param=128 n=32 done
+[progress] matmul dist=uniform param=128 n=64 done
+[progress] matmul dist=uniform param=128 n=128 done
+[progress] matmul dist=uniform param=128 n=256 done
+[progress] matmul dist=uniform param=128 n=512 done
+[progress] matmul dist=uniform param=128 n=1024 done
+[progress] matmul dist=uniform param=128 n=2048 done

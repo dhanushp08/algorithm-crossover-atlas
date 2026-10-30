@@ -1,0 +1,1 @@
+profile=quick reps=3 warmup=1 max_seconds=20

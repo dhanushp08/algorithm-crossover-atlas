@@ -1,0 +1,1 @@
+profile=patch reps=5 warmup=2 max_seconds=90

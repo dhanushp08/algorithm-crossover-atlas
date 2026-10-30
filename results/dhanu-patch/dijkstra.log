@@ -1,0 +1,53 @@
+[info] pair=dijkstra counters: cycles:unavailable instructions:unavailable l1d_misses:unavailable llc_misses:unavailable branch_misses:unavailable 
+[cell] pair=dijkstra dist=dense param=4 n=100 vertices=100 edges=9900 pops=100 pushes=100 decrease_keys=292
+[progress] dijkstra dist=dense param=4 n=100 done
+[cell] pair=dijkstra dist=dense param=4 n=119 vertices=119 edges=14042 pops=119 pushes=119 decrease_keys=388
+[progress] dijkstra dist=dense param=4 n=119 done
+[cell] pair=dijkstra dist=dense param=4 n=142 vertices=142 edges=20022 pops=142 pushes=142 decrease_keys=495
+[progress] dijkstra dist=dense param=4 n=142 done
+[cell] pair=dijkstra dist=dense param=4 n=169 vertices=169 edges=28392 pops=169 pushes=169 decrease_keys=583
+[progress] dijkstra dist=dense param=4 n=169 done
+[cell] pair=dijkstra dist=dense param=4 n=201 vertices=201 edges=40200 pops=201 pushes=201 decrease_keys=796
+[progress] dijkstra dist=dense param=4 n=201 done
+[cell] pair=dijkstra dist=dense param=4 n=239 vertices=239 edges=56882 pops=239 pushes=239 decrease_keys=960
+[progress] dijkstra dist=dense param=4 n=239 done
+[cell] pair=dijkstra dist=dense param=4 n=284 vertices=284 edges=80372 pops=284 pushes=284 decrease_keys=1131
+[progress] dijkstra dist=dense param=4 n=284 done
+[cell] pair=dijkstra dist=dense param=4 n=338 vertices=338 edges=113906 pops=338 pushes=338 decrease_keys=1477
+[progress] dijkstra dist=dense param=4 n=338 done
+[cell] pair=dijkstra dist=dense param=4 n=402 vertices=402 edges=161202 pops=402 pushes=402 decrease_keys=1712
+[progress] dijkstra dist=dense param=4 n=402 done
+[cell] pair=dijkstra dist=dense param=4 n=479 vertices=479 edges=228962 pops=479 pushes=479 decrease_keys=2185
+[progress] dijkstra dist=dense param=4 n=479 done
+[cell] pair=dijkstra dist=dense param=4 n=569 vertices=569 edges=323192 pops=569 pushes=569 decrease_keys=2712
+[progress] dijkstra dist=dense param=4 n=569 done
+[cell] pair=dijkstra dist=dense param=4 n=678 vertices=678 edges=459006 pops=678 pushes=678 decrease_keys=3284
+[progress] dijkstra dist=dense param=4 n=678 done
+[cell] pair=dijkstra dist=dense param=4 n=806 vertices=806 edges=648830 pops=806 pushes=806 decrease_keys=4030
+[progress] dijkstra dist=dense param=4 n=806 done
+[cell] pair=dijkstra dist=dense param=4 n=960 vertices=960 edges=920640 pops=960 pushes=960 decrease_keys=4897
+[progress] dijkstra dist=dense param=4 n=960 done
+[cell] pair=dijkstra dist=dense param=4 n=1142 vertices=1142 edges=1303022 pops=1142 pushes=1142 decrease_keys=5904
+[progress] dijkstra dist=dense param=4 n=1142 done
+[cell] pair=dijkstra dist=dense param=4 n=1359 vertices=1359 edges=1845522 pops=1359 pushes=1359 decrease_keys=7124
+[progress] dijkstra dist=dense param=4 n=1359 done
+[cell] pair=dijkstra dist=dense param=4 n=1617 vertices=1617 edges=2613072 pops=1617 pushes=1617 decrease_keys=8685
+[progress] dijkstra dist=dense param=4 n=1617 done
+[cell] pair=dijkstra dist=dense param=4 n=1924 vertices=1924 edges=3699852 pops=1924 pushes=1924 decrease_keys=10552
+[progress] dijkstra dist=dense param=4 n=1924 done
+[cell] pair=dijkstra dist=dense param=4 n=2290 vertices=2290 edges=5241810 pops=2290 pushes=2290 decrease_keys=12756
+[progress] dijkstra dist=dense param=4 n=2290 done
+[cell] pair=dijkstra dist=dense param=4 n=2725 vertices=2725 edges=7422900 pops=2725 pushes=2725 decrease_keys=15389
+[progress] dijkstra dist=dense param=4 n=2725 done
+[cell] pair=dijkstra dist=dense param=4 n=3243 vertices=3243 edges=10513806 pops=3243 pushes=3243 decrease_keys=18117
+[progress] dijkstra dist=dense param=4 n=3243 done
+[cell] pair=dijkstra dist=dense param=4 n=3859 vertices=3859 edges=14888022 pops=3859 pushes=3859 decrease_keys=22143
+[progress] dijkstra dist=dense param=4 n=3859 done
+[cell] pair=dijkstra dist=dense param=4 n=4592 vertices=4592 edges=21081872 pops=4592 pushes=4592 decrease_keys=26530
+[progress] dijkstra dist=dense param=4 n=4592 done
+[cell] pair=dijkstra dist=dense param=4 n=5465 vertices=5465 edges=29860760 pops=5465 pushes=5465 decrease_keys=32055
+[progress] dijkstra dist=dense param=4 n=5465 done
+[cell] pair=dijkstra dist=dense param=4 n=6503 vertices=6503 edges=42282506 pops=6503 pushes=6503 decrease_keys=38013
+[progress] dijkstra dist=dense param=4 n=6503 done
+[cell] pair=dijkstra dist=dense param=4 n=7739 vertices=7739 edges=59884382 pops=7739 pushes=7739 decrease_keys=45665
+[progress] dijkstra dist=dense param=4 n=7739 done

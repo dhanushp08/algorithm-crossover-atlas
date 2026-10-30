@@ -1,0 +1,2 @@
+compiler: GNU 15.2.0
+flags: -Wall;-Wextra;-g;-fno-omit-frame-pointer;-O2

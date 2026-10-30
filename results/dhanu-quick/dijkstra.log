@@ -1,0 +1,79 @@
+[info] pair=dijkstra counters: cycles:unavailable instructions:unavailable l1d_misses:unavailable llc_misses:unavailable branch_misses:unavailable 
+[cell] pair=dijkstra dist=random param=4 n=100 vertices=100 edges=400 pops=97 pushes=97 decrease_keys=33
+[progress] dijkstra dist=random param=4 n=100 done
+[cell] pair=dijkstra dist=random param=4 n=400 vertices=400 edges=1600 pops=387 pushes=387 decrease_keys=124
+[progress] dijkstra dist=random param=4 n=400 done
+[cell] pair=dijkstra dist=random param=4 n=1600 vertices=1600 edges=6400 pops=1565 pushes=1565 decrease_keys=501
+[progress] dijkstra dist=random param=4 n=1600 done
+[cell] pair=dijkstra dist=random param=4 n=6400 vertices=6400 edges=25600 pops=6262 pushes=6262 decrease_keys=2001
+[progress] dijkstra dist=random param=4 n=6400 done
+[cell] pair=dijkstra dist=random param=4 n=25600 vertices=25600 edges=102400 pops=25116 pushes=25116 decrease_keys=8246
+[progress] dijkstra dist=random param=4 n=25600 done
+[cell] pair=dijkstra dist=random param=4 n=102400 vertices=102400 edges=409600 pops=100416 pushes=100416 decrease_keys=32464
+[progress] dijkstra dist=random param=4 n=102400 done
+[cell] pair=dijkstra dist=random param=4 n=409600 vertices=409600 edges=1638400 pops=401503 pushes=401503 decrease_keys=129525
+[progress] dijkstra dist=random param=4 n=409600 done
+[cell] pair=dijkstra dist=random param=4 n=1638400 vertices=1638400 edges=6553600 pops=1605666 pushes=1605666 decrease_keys=517126
+[progress] dijkstra dist=random param=4 n=1638400 done
+[cell] pair=dijkstra dist=random param=4 n=6553600 vertices=6553600 edges=26214400 pops=6423555 pushes=6423555 decrease_keys=2072909
+[progress] dijkstra dist=random param=4 n=6553600 done
+[cell] pair=dijkstra dist=random param=16 n=100 vertices=100 edges=1600 pops=100 pushes=100 decrease_keys=138
+[progress] dijkstra dist=random param=16 n=100 done
+[cell] pair=dijkstra dist=random param=16 n=400 vertices=400 edges=6400 pops=400 pushes=400 decrease_keys=546
+[progress] dijkstra dist=random param=16 n=400 done
+[cell] pair=dijkstra dist=random param=16 n=1600 vertices=1600 edges=25600 pops=1600 pushes=1600 decrease_keys=2276
+[progress] dijkstra dist=random param=16 n=1600 done
+[cell] pair=dijkstra dist=random param=16 n=6400 vertices=6400 edges=102400 pops=6400 pushes=6400 decrease_keys=9034
+[progress] dijkstra dist=random param=16 n=6400 done
+[cell] pair=dijkstra dist=random param=16 n=25600 vertices=25600 edges=409600 pops=25600 pushes=25600 decrease_keys=36027
+[progress] dijkstra dist=random param=16 n=25600 done
+[cell] pair=dijkstra dist=random param=16 n=102400 vertices=102400 edges=1638400 pops=102400 pushes=102400 decrease_keys=144115
+[progress] dijkstra dist=random param=16 n=102400 done
+[cell] pair=dijkstra dist=random param=16 n=409600 vertices=409600 edges=6553600 pops=409600 pushes=409600 decrease_keys=577819
+[progress] dijkstra dist=random param=16 n=409600 done
+[cell] pair=dijkstra dist=random param=16 n=1638400 vertices=1638400 edges=26214400 pops=1638400 pushes=1638400 decrease_keys=2311191
+[progress] dijkstra dist=random param=16 n=1638400 done
+[cell] pair=dijkstra dist=random param=16 n=6553600 vertices=6553600 edges=104857600 pops=6553598 pushes=6553598 decrease_keys=9237085
+[progress] dijkstra dist=random param=16 n=6553600 done
+[cell] pair=dijkstra dist=random param=64 n=100 vertices=100 edges=6400 pops=100 pushes=100 decrease_keys=311
+[progress] dijkstra dist=random param=64 n=100 done
+[cell] pair=dijkstra dist=random param=64 n=400 vertices=400 edges=25600 pops=400 pushes=400 decrease_keys=1063
+[progress] dijkstra dist=random param=64 n=400 done
+[cell] pair=dijkstra dist=random param=64 n=1600 vertices=1600 edges=102400 pops=1600 pushes=1600 decrease_keys=4325
+[progress] dijkstra dist=random param=64 n=1600 done
+[cell] pair=dijkstra dist=random param=64 n=6400 vertices=6400 edges=409600 pops=6400 pushes=6400 decrease_keys=17517
+[progress] dijkstra dist=random param=64 n=6400 done
+[cell] pair=dijkstra dist=random param=64 n=25600 vertices=25600 edges=1638400 pops=25600 pushes=25600 decrease_keys=69968
+[progress] dijkstra dist=random param=64 n=25600 done
+[cell] pair=dijkstra dist=random param=64 n=102400 vertices=102400 edges=6553600 pops=102400 pushes=102400 decrease_keys=277817
+[progress] dijkstra dist=random param=64 n=102400 done
+[cell] pair=dijkstra dist=random param=64 n=409600 vertices=409600 edges=26214400 pops=409600 pushes=409600 decrease_keys=1114696
+[progress] dijkstra dist=random param=64 n=409600 done
+[cell] pair=dijkstra dist=random param=64 n=1638400 vertices=1638400 edges=104857600 pops=1638400 pushes=1638400 decrease_keys=4458458
+[progress] dijkstra dist=random param=64 n=1638400 done
+[cell] pair=dijkstra dist=grid param=4 n=100 vertices=100 edges=360 pops=100 pushes=100 decrease_keys=25
+[progress] dijkstra dist=grid param=4 n=100 done
+[cell] pair=dijkstra dist=grid param=4 n=400 vertices=400 edges=1520 pops=400 pushes=400 decrease_keys=104
+[progress] dijkstra dist=grid param=4 n=400 done
+[cell] pair=dijkstra dist=grid param=4 n=1600 vertices=1600 edges=6240 pops=1600 pushes=1600 decrease_keys=484
+[progress] dijkstra dist=grid param=4 n=1600 done
+[cell] pair=dijkstra dist=grid param=4 n=6400 vertices=6400 edges=25280 pops=6400 pushes=6400 decrease_keys=1998
+[progress] dijkstra dist=grid param=4 n=6400 done
+[cell] pair=dijkstra dist=grid param=4 n=25600 vertices=25600 edges=101760 pops=25600 pushes=25600 decrease_keys=8282
+[progress] dijkstra dist=grid param=4 n=25600 done
+[cell] pair=dijkstra dist=grid param=4 n=102400 vertices=102400 edges=408320 pops=102400 pushes=102400 decrease_keys=33376
+[progress] dijkstra dist=grid param=4 n=102400 done
+[cell] pair=dijkstra dist=grid param=4 n=409600 vertices=409600 edges=1635840 pops=409600 pushes=409600 decrease_keys=133173
+[progress] dijkstra dist=grid param=4 n=409600 done
+[cell] pair=dijkstra dist=grid param=4 n=1638400 vertices=1638400 edges=6548480 pops=1638400 pushes=1638400 decrease_keys=533821
+[progress] dijkstra dist=grid param=4 n=1638400 done
+[cell] pair=dijkstra dist=grid param=4 n=6553600 vertices=6553600 edges=26204160 pops=6553600 pushes=6553600 decrease_keys=2138668
+[progress] dijkstra dist=grid param=4 n=6553600 done
+[cell] pair=dijkstra dist=dense param=4 n=100 vertices=100 edges=9900 pops=100 pushes=100 decrease_keys=292
+[progress] dijkstra dist=dense param=4 n=100 done
+[cell] pair=dijkstra dist=dense param=4 n=400 vertices=400 edges=159600 pops=400 pushes=400 decrease_keys=1738
+[progress] dijkstra dist=dense param=4 n=400 done
+[cell] pair=dijkstra dist=dense param=4 n=1600 vertices=1600 edges=2558400 pops=1600 pushes=1600 decrease_keys=8467
+[progress] dijkstra dist=dense param=4 n=1600 done
+[cell] pair=dijkstra dist=dense param=4 n=6400 vertices=6400 edges=40953600 pops=6400 pushes=6400 decrease_keys=37505
+[progress] dijkstra dist=dense param=4 n=6400 done
