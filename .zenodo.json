@@ -1,0 +1,14 @@
+{
+  "title": "algorithm-crossover-atlas: code and data for \"When Does a Theoretically Faster Algorithm Actually Win?\"",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Paturu, Dhanush",
+      "affiliation": "Nitte Meenakshi Institute of Technology, Bengaluru, India",
+      "orcid": "0009-0004-4918-6181"
+    }
+  ],
+  "description": "Benchmark harness, four algorithm-pair implementations (radix sort vs introsort, Strassen vs naive matrix multiplication, Karatsuba vs schoolbook multiplication, Fibonacci-heap vs binary-heap Dijkstra), randomized correctness tests, raw timing measurements, and the analysis pipeline that produces the crossover table and figures in the preprint of the same name.",
+  "license": "MIT",
+  "keywords": ["experimental algorithmics", "benchmarking", "crossover point", "radix sort", "Strassen", "Karatsuba", "Fibonacci heap"]
+}

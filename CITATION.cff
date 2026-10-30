@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this code or data, please cite the preprint and the archived release."
+title: "When Does a Theoretically Faster Algorithm Actually Win? An empirical crossover atlas for four classic algorithm pairs"
+type: software
+version: "1.0"
+date-released: 2026-10-30
+authors:
+  - family-names: Paturu
+    given-names: Dhanush
+    orcid: "https://orcid.org/0009-0004-4918-6181"
+    affiliation: "Nitte Meenakshi Institute of Technology, Bengaluru, India"
+repository-code: "https://github.com/dhanushp08/algorithm-crossover-atlas"
+license: MIT
+keywords:
+  - experimental algorithmics
+  - benchmarking
+  - radix sort
+  - Strassen
+  - Karatsuba
+  - Fibonacci heap
+  - crossover point
